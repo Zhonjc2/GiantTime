@@ -21,18 +21,11 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
-/*class SecondPageThread extends Thread{
-    Pane mainPane;
-
-    public SecondPageThread(Pane mainPane){
-        this.mainPane=mainPane;
-    }
-    public void run(){
-
-    }
-}*/
 
 public class Main extends Application {
+    public static void main(String[] args){
+        Application.launch(args);
+    }
     final static String FONT_LIBRARY ="file://"+"/Users/zhonjc/IdeaProjects/GiantTime/MainInterface/src/OPPOSans-H.ttf";
     Pane mainPane=new Pane();
     volatile Scene mainScene=new Scene(mainPane);
@@ -40,7 +33,6 @@ public class Main extends Application {
 
     //主题色
     Color mainColor0=Color.web("#ECECEC");
-    Color mainColor1=Color.WHITE;
     Color buttonColor=Color.web("#C4C4C4");
     Color blankColor=Color.web("#E6E6E6");
     Color mainColorTransparent=new Color(mainColor0.getRed(), mainColor0.getGreen(), mainColor0.getBlue(), 0);
@@ -95,7 +87,7 @@ public class Main extends Application {
     NealGroupButton hoursCounter=new NealGroupButton(mainScene,42,23,24,"小时",Color.WHITE,buttonColor,Color.BLACK,nextFont);
     NealGroupButton minutesCounter=new NealGroupButton(mainScene,42,23,24,"分",Color.WHITE,buttonColor,Color.BLACK,nextFont);
     NealGroupButton secondsCounter=new NealGroupButton(mainScene,42,23,24,"秒",Color.WHITE,buttonColor,Color.BLACK,nextFont);
-    NealGroupButton quit=new NealGroupButton(mainScene,42,23,24,"关闭",Color.web("#FF9E9E"),Color.RED,Color.WHITE,nextFont);
+    NealGroupButton quit=new NealGroupButton(mainScene,42,23,24,"关闭",Color.web("#FF4545"),Color.RED,Color.WHITE,nextFont);
     HBox buttonCounterGroup;
 
     static String iName;
@@ -140,10 +132,14 @@ public class Main extends Application {
             counterText=new Text();
             counterText.setFont(counterFont);
             counterText.setText(mainTimer.getGapDays() + "");
-//            daysCounter.avoid(hoursCounter,minutesCounter,secondsCounter);
-//            hoursCounter.avoid(daysCounter,minutesCounter,secondsCounter);
-//            minutesCounter.avoid(daysCounter,hoursCounter,secondsCounter);
-//            secondsCounter.avoid(daysCounter,hoursCounter,minutesCounter);
+            daysCounter.setClicked(()->current="days",hoursCounter,minutesCounter,secondsCounter);
+            hoursCounter.setClicked(()->current="hours",daysCounter,minutesCounter,secondsCounter);
+            minutesCounter.setClicked(()->current="minutes",hoursCounter,daysCounter,secondsCounter);
+            secondsCounter.setClicked(()->current="seconds",hoursCounter,minutesCounter,daysCounter);
+            quit.setClicked(()->{
+                Platform.exit();
+                System.exit(0);
+            });
             buttonCounterGroup = new HBox(daysCounter.getButton(), hoursCounter.getButton(), minutesCounter.getButton(), secondsCounter.getButton(), quit.getButton());
             buttonCounterGroup.setSpacing(30);
             buttonCounterGroup.setAlignment(Pos.CENTER);
@@ -164,16 +160,9 @@ public class Main extends Application {
                 try {
                     lock.wait();
                 }catch(InterruptedException e){}
+                daysCounter.isSelected(true);
                 Platform.runLater(()->mainPane.getChildren().addAll(nameStack,counterStack,buttonStack));
             }
-            daysCounter.getButton().setOnMouseClicked(event -> current="days");
-            hoursCounter.getButton().setOnMouseClicked(event -> current="hours");
-            minutesCounter.getButton().setOnMouseClicked(event -> current="minutes");
-            secondsCounter.getButton().setOnMouseClicked(event -> current="seconds");
-            quit.getButton().setOnMouseClicked(event -> {
-                Platform.exit();
-                System.exit(0);
-            });
             //倒计时线程
             new Thread(()->{
                 while(true){
@@ -197,7 +186,7 @@ public class Main extends Application {
                                 counterText.setText(mainTimer.getGapSeconds()+"");
                             }break;
                         }
-                        Thread.sleep(1000);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }catch(TimeOutException e1){
@@ -206,7 +195,7 @@ public class Main extends Application {
                     }
                 }
                 Text over=new Text(iName+"计时结束！");
-                over.setFont(counterFont);
+                over.setFont(Font.loadFont(FONT_LIBRARY,getCounterSize(over.getText())));
                 over.setFill(new Color(1,1,1,0));
                 Rectangle temp=new Rectangle(mainRec.getWidth(),mainRec.getHeight(),mainColorTransparent);
                 temp.setArcHeight(mainRec.getArcHeight());
@@ -219,9 +208,7 @@ public class Main extends Application {
                 Platform.runLater(()->mainPane.getChildren().add(overTemp));
                 KeyValue v=new KeyValue(temp.fillProperty(),mainColor0);
                 KeyValue v1=new KeyValue(over.fillProperty(),Color.BLACK);
-                KeyFrame f=new KeyFrame(Duration.millis(1000),event -> {
-                    Platform.runLater(()->mainPane.getChildren().add(over));
-                },v,v1);
+                KeyFrame f=new KeyFrame(Duration.millis(1000),v,v1);
                 Timeline l=new Timeline(f);
                 l.play();
             }).start();
@@ -394,9 +381,7 @@ public class Main extends Application {
                 KeyValue c2 = new KeyValue(timeChooser.layoutXProperty(), 329.71);
                 KeyValue c3 = new KeyValue(timeChooser.fillProperty(), buttonColor);
 //            KeyValue c4=new KeyValue(timeChooser.effectProperty(),new DropShadow(40,new Color(0,0,0,0.2)));
-                KeyFrame frame1 = new KeyFrame(Duration.millis(300), event1 -> {
-                    chooser();
-                }, c1, c2, c3);
+                KeyFrame frame1 = new KeyFrame(Duration.millis(300), event1 ->chooser(), c1, c2, c3);
                 Timeline line1 = new Timeline(frame1);
                 line1.play();
 
